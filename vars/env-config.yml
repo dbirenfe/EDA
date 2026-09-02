@@ -1,0 +1,63 @@
+---
+# ===========================================================================
+# Environment Configuration for EDA
+# ===========================================================================
+# Copy this file and adjust values for each environment.
+# This file is the SINGLE SOURCE OF TRUTH for environment-specific settings.
+# Rulebooks, playbooks, and scripts reference these values so you only
+# change them in one place when moving between environments.
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# AAP Controller connection
+# ---------------------------------------------------------------------------
+aap_controller:
+  host: "https://controller.example.com"
+  # Username used by EDA Controller to trigger job templates.
+  # In production, use a credential/token instead of password.
+  username: "eda-service-account"
+  validate_certs: true                 # set to false for self-signed certs
+
+# ---------------------------------------------------------------------------
+# EDA Controller
+# ---------------------------------------------------------------------------
+eda_controller:
+  host: "https://eda.example.com"
+  # Port the EDA Controller API listens on (default 443 behind reverse proxy)
+  api_port: 443
+
+# ---------------------------------------------------------------------------
+# Webhook listener defaults
+# ---------------------------------------------------------------------------
+webhook:
+  host: "0.0.0.0"
+  port: 5000
+
+# ---------------------------------------------------------------------------
+# Alertmanager source defaults
+# ---------------------------------------------------------------------------
+alertmanager:
+  host: "0.0.0.0"
+  port: 8000
+
+# ---------------------------------------------------------------------------
+# Container registry (Quay)
+# ---------------------------------------------------------------------------
+registry:
+  host: "quay.example.com"
+  namespace: "eda"
+  # Decision Environment image name
+  de_image: "custom-de"
+  de_tag: "latest"
+  # Full image reference: {{ registry.host }}/{{ registry.namespace }}/{{ registry.de_image }}:{{ registry.de_tag }}
+
+# ---------------------------------------------------------------------------
+# Offline / Air-gapped settings
+# ---------------------------------------------------------------------------
+offline:
+  # Path to mirrored collections on the target host
+  collections_path: "/opt/ansible/collections"
+  # Private Automation Hub URL (if available)
+  private_hub_url: "https://hub.example.com"
+  # Set to true if no outbound internet is available
+  air_gapped: true

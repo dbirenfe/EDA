@@ -1,0 +1,51 @@
+---
+# ===========================================================================
+# Notify Team
+# ===========================================================================
+# Sends a notification about an EDA event. Stub implementation that logs
+# the notification -- replace with your actual notification method.
+#
+# Expected extra_vars (passed by EDA):
+#   alert_message: message to send
+#   severity:      alert severity
+# ===========================================================================
+
+- name: Notify team about event
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    alert_message: "{{ alert_message | default('EDA event triggered') }}"
+    severity: "{{ severity | default('info') }}"
+
+  tasks:
+    - name: Build notification
+      ansible.builtin.set_fact:
+        notification:
+          channel: "#ops-alerts"
+          message: "[{{ severity | upper }}] {{ alert_message }}"
+          timestamp: "{{ lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ') }}"
+
+    - name: Display notification that would be sent
+      ansible.builtin.debug:
+        msg: "{{ notification }}"
+
+    # CUSTOMIZE: Replace with your notification method:
+    #
+    # Email:
+    # - name: Send email notification
+    #   community.general.mail:
+    #     host: smtp.example.com
+    #     to: ops-team@example.com
+    #     subject: "{{ notification.message }}"
+    #     body: "{{ alert_message }}\n\nTimestamp: {{ notification.timestamp }}"
+    #
+    # Rocket.Chat / Mattermost:
+    # - name: Send to chat
+    #   ansible.builtin.uri:
+    #     url: "https://chat.example.com/hooks/your-webhook-id"
+    #     method: POST
+    #     body_format: json
+    #     body:
+    #       text: "{{ notification.message }}"

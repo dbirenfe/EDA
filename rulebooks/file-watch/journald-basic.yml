@@ -1,0 +1,54 @@
+---
+# ===========================================================================
+# Journald - Basic Example
+# ===========================================================================
+# Monitors the systemd journal for specific log entries.
+#
+# Use cases:
+#   - Detect failed SSH logins
+#   - Monitor service crashes
+#   - React to kernel errors
+#   - Watch for specific application log messages
+#
+# CUSTOMIZE:
+#   - Change the match filter to target specific services
+#   - Adjust conditions for the messages you care about
+#   - Change job template names
+#
+# Note: The journald source requires access to the host's journal.
+#       In containerized EDA, you may need to mount /var/log/journal
+#       or /run/log/journal into the Decision Environment.
+# ===========================================================================
+
+- name: Journald - Monitor System Logs
+  hosts: all
+  sources:
+    - ansible.eda.journald:
+        match: "SYSLOG_IDENTIFIER=sshd"      # CUSTOMIZE: service to monitor
+
+  rules:
+    # -----------------------------------------------------------------------
+    # Rule 1: Failed SSH login attempts
+    # -----------------------------------------------------------------------
+    - name: Detect failed SSH logins
+      condition: event.MESSAGE is match(".*Failed password.*")
+      action:
+        debug:
+          msg: "Failed SSH login detected on {{ event._HOSTNAME | default('unknown') }}: {{ event.MESSAGE }}"
+        # For production:
+        # run_job_template:
+        #   name: "Security - Failed Login"
+        #   organization: "Default"
+        #   job_args:
+        #     extra_vars:
+        #       hostname: "{{ event._HOSTNAME | default('unknown') }}"
+        #       message: "{{ event.MESSAGE }}"
+
+    # -----------------------------------------------------------------------
+    # Rule 2: Catch-all for the monitored service
+    # -----------------------------------------------------------------------
+    - name: Log all sshd messages
+      condition: event.MESSAGE is defined
+      action:
+        debug:
+          msg: "sshd: {{ event.MESSAGE }}"

@@ -1,0 +1,50 @@
+---
+# ===========================================================================
+# Remediate Service
+# ===========================================================================
+# Restarts a failed service on the target host.
+# Typically triggered by EDA when an alert indicates a service is down.
+#
+# Expected extra_vars (passed by EDA):
+#   target_host:   hostname or IP to remediate
+#   service_name:  systemd service to restart
+#   severity:      (optional) alert severity for logging
+# ===========================================================================
+
+- name: Remediate failed service
+  hosts: "{{ target_host | default('localhost') }}"
+  gather_facts: true
+  become: true
+
+  vars:
+    service_name: "{{ service_name | default('httpd') }}"
+    max_retries: 3
+
+  tasks:
+    - name: Check current service status
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+      register: service_status
+
+    - name: Display current status
+      ansible.builtin.debug:
+        msg: "Service {{ service_name }} state: {{ service_status.status.ActiveState | default('unknown') }}"
+
+    - name: Attempt to restart the service
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+      register: restart_result
+      retries: "{{ max_retries }}"
+      delay: 5
+      until: restart_result is success
+
+    - name: Verify service is running
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+      register: verify_status
+      failed_when: verify_status.status.ActiveState != "active"
+
+    - name: Report success
+      ansible.builtin.debug:
+        msg: "Service {{ service_name }} successfully restarted on {{ inventory_hostname }}"

@@ -1,0 +1,35 @@
+---
+# ===========================================================================
+# Alertmanager - Basic Example
+# ===========================================================================
+# Listens for Alertmanager webhook notifications and logs all incoming
+# alerts. Use this to see the full event structure before writing filters.
+#
+# Prerequisites:
+#   - Alertmanager configured to send webhooks to this host:port
+#
+# Usage:
+#   ansible-rulebook --rulebook alertmanager-basic.yml \
+#     -i ../../inventories/inventory.yml --verbose
+#
+# Test:
+#   ./scripts/test-alertmanager.sh http://localhost:8000
+# ===========================================================================
+
+- name: Alertmanager - Catch All Alerts
+  hosts: all
+  sources:
+    - ansible.eda.alertmanager:
+        host: 0.0.0.0
+        port: 8000
+
+  rules:
+    - name: Log every alert
+      condition: event.payload.alerts is defined
+      action:
+        debug:
+          msg: >-
+            Alert received:
+            status={{ event.payload.status }},
+            alertname={{ event.payload.alerts[0].labels.alertname }},
+            severity={{ event.payload.alerts[0].labels.severity | default('unknown') }}

@@ -1,0 +1,25 @@
+---
+# ===========================================================================
+# Example Inventory
+# ===========================================================================
+# Used for local testing with ansible-rulebook CLI.
+# In production, job templates use inventories from AAP Controller.
+#
+# CUSTOMIZE: Replace with your actual hosts
+# ===========================================================================
+
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+  children:
+    webservers:
+      hosts:
+        # webserver01:
+        #   ansible_host: 192.168.1.10
+        # webserver02:
+        #   ansible_host: 192.168.1.11
+    databases:
+      hosts:
+        # db01:
+        #   ansible_host: 192.168.1.20

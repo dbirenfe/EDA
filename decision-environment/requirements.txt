@@ -1,0 +1,16 @@
+# ===========================================================================
+# Python Package Requirements for the Decision Environment
+# ===========================================================================
+# Packages listed here will be pip-installed into the DE image.
+# The base DE image already includes ansible-rulebook and its core deps.
+# Only add packages your custom source plugins or filters need.
+# ===========================================================================
+
+# aiohttp is typically already in the base image, but list it explicitly
+# if your custom source plugin depends on it
+# aiohttp
+
+# JSON path queries (useful in custom filters)
+# jmespath
+
+# Add your custom Python dependencies below:

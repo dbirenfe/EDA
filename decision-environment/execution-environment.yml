@@ -1,0 +1,47 @@
+---
+# ===========================================================================
+# Decision Environment Definition
+# ===========================================================================
+# Input file for ansible-builder. Defines what goes into the DE image.
+#
+# Build with:
+#   ansible-builder build --file execution-environment.yml \
+#     --tag quay.your-domain.com/eda/custom-de:latest \
+#     --container-runtime podman
+#
+# CUSTOMIZE:
+#   - Change the base image to your Quay mirror for offline builds
+#   - Add collections to requirements.yml
+#   - Add Python packages to requirements.txt
+# ===========================================================================
+
+version: 3
+
+build_arg_defaults:
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: "--pre"
+
+images:
+  # Base image -- change to your Quay mirror for offline builds
+  # Online:  registry.redhat.io/ansible-automation-platform-25/de-supported-rhel9:latest
+  # Offline: quay.your-domain.com/eda/de-supported-rhel9:latest
+  base_image:
+    name: "registry.redhat.io/ansible-automation-platform-25/de-supported-rhel9:latest"
+
+dependencies:
+  galaxy: requirements.yml
+  python: requirements.txt
+  # system: bindep.txt           # Uncomment if you need system packages (RPMs)
+
+# Optional: additional build steps for offline/custom needs
+# additional_build_steps:
+#   prepend_base:
+#     # Use internal RPM repos instead of public ones
+#     - RUN rm -f /etc/yum.repos.d/ubi.repo
+#     - COPY my-internal.repo /etc/yum.repos.d/
+#   prepend_galaxy:
+#     # Use Private Automation Hub for collections
+#     - COPY ansible.cfg /etc/ansible/ansible.cfg
+#   prepend_final:
+#     # Install Python packages from local mirror
+#     - COPY python-packages/ /tmp/python-packages/
+#     - RUN pip install --no-index --find-links /tmp/python-packages/ -r /tmp/requirements.txt

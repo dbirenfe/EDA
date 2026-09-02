@@ -1,0 +1,11 @@
+---
+# ===========================================================================
+# Group Variables - All Hosts
+# ===========================================================================
+# Variables that apply to all hosts in the inventory.
+# CUSTOMIZE: Adjust for your environment.
+# ===========================================================================
+
+# ansible_user: ansible
+# ansible_become: true
+# ansible_become_method: sudo

@@ -1,0 +1,18 @@
+---
+# ===========================================================================
+# Ansible Collection Requirements for the Decision Environment
+# ===========================================================================
+# Collections listed here will be installed into the DE image.
+#
+# For offline builds, use local tarball paths:
+#   - name: ./collections/ansible-eda-1.5.0.tar.gz
+#     type: file
+# ===========================================================================
+
+collections:
+  # Core EDA collection -- provides webhook, alertmanager, file_watch, journald source plugins
+  - name: ansible.eda
+
+  # Add your custom collections below:
+  # - name: myorg.myeda
+  # - name: community.general

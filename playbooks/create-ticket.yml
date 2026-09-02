@@ -1,0 +1,66 @@
+---
+# ===========================================================================
+# Create Ticket (Stub)
+# ===========================================================================
+# Placeholder playbook for creating an incident ticket in your ticketing
+# system (ServiceNow, Jira, etc.).
+#
+# Replace the debug tasks with actual API calls to your ticketing system.
+#
+# Expected extra_vars (passed by EDA):
+#   alert_name:    name of the triggering alert
+#   severity:      alert severity
+#   target_host:   affected host
+#   alert_summary: human-readable description
+# ===========================================================================
+
+- name: Create incident ticket
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    alert_name: "{{ alert_name | default('Unknown Alert') }}"
+    severity: "{{ severity | default('warning') }}"
+    target_host: "{{ target_host | default('unknown') }}"
+    alert_summary: "{{ alert_summary | default('No summary provided') }}"
+
+  tasks:
+    - name: Build ticket payload
+      ansible.builtin.set_fact:
+        ticket_data:
+          title: "[EDA] {{ alert_name }} on {{ target_host }}"
+          description: |
+            Automated ticket created by Event-Driven Ansible.
+
+            Alert: {{ alert_name }}
+            Severity: {{ severity }}
+            Host: {{ target_host }}
+            Summary: {{ alert_summary }}
+            Time: {{ ansible_date_time.iso8601 | default(lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ')) }}
+          priority: "{{ 'high' if severity == 'critical' else 'medium' }}"
+
+    - name: Display ticket that would be created
+      ansible.builtin.debug:
+        msg: "{{ ticket_data }}"
+
+    # CUSTOMIZE: Replace the debug above with your ticketing system integration.
+    # Examples:
+    #
+    # ServiceNow:
+    # - name: Create ServiceNow incident
+    #   servicenow.itsm.incident:
+    #     state: new
+    #     short_description: "{{ ticket_data.title }}"
+    #     description: "{{ ticket_data.description }}"
+    #     urgency: "{{ ticket_data.priority }}"
+    #
+    # Jira:
+    # - name: Create Jira issue
+    #   community.general.jira:
+    #     uri: https://jira.example.com
+    #     operation: create
+    #     project: OPS
+    #     issuetype: Bug
+    #     summary: "{{ ticket_data.title }}"
+    #     description: "{{ ticket_data.description }}"

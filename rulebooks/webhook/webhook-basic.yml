@@ -1,0 +1,30 @@
+---
+# ===========================================================================
+# Webhook - Basic Example
+# ===========================================================================
+# A minimal webhook listener that catches ALL incoming events and prints
+# them. Use this to explore what event data looks like before writing
+# real conditions.
+#
+# Usage:
+#   ansible-rulebook --rulebook webhook-basic.yml -i ../../inventories/inventory.yml --verbose
+#
+# Test:
+#   curl -X POST http://localhost:5000/endpoint \
+#     -H "Content-Type: application/json" \
+#     -d '{"message": "hello from EDA"}'
+# ===========================================================================
+
+- name: Webhook - Catch All Events
+  hosts: all
+  sources:
+    - ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 5000
+
+  rules:
+    - name: Log every incoming event
+      condition: event.payload is defined
+      action:
+        debug:
+          msg: "Received webhook event: {{ event.payload }}"

@@ -1,0 +1,87 @@
+---
+# ===========================================================================
+# Alertmanager - Filtered Example
+# ===========================================================================
+# Routes Alertmanager events to different job templates based on alert
+# name and severity.
+#
+# Demonstrates:
+#   - Filtering by alert status (firing vs. resolved)
+#   - Filtering by alert labels (alertname, severity)
+#   - Passing alert data as extra_vars to job templates
+#   - Handling resolved alerts separately
+#
+# CUSTOMIZE:
+#   - Change job template names to match your AAP Controller
+#   - Change organization name
+#   - Adjust alert names and severity levels for your environment
+# ===========================================================================
+
+- name: Alertmanager - Smart Alert Routing
+  hosts: all
+  sources:
+    - ansible.eda.alertmanager:
+        host: 0.0.0.0
+        port: 8000
+
+  rules:
+    # -----------------------------------------------------------------------
+    # Rule 1: Critical firing alerts -- immediate remediation
+    # -----------------------------------------------------------------------
+    - name: Remediate critical firing alerts
+      condition:
+        all:
+          - event.payload.status == "firing"
+          - event.payload.alerts[0].labels.severity == "critical"
+      action:
+        run_job_template:
+          name: "Remediate Service"           # CUSTOMIZE
+          organization: "Default"             # CUSTOMIZE
+          job_args:
+            extra_vars:
+              alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
+              target_instance: "{{ event.payload.alerts[0].labels.instance | default('unknown') }}"
+              severity: "critical"
+              alert_summary: "{{ event.payload.alerts[0].annotations.summary | default('No summary') }}"
+
+    # -----------------------------------------------------------------------
+    # Rule 2: Warning firing alerts -- gather diagnostics
+    # -----------------------------------------------------------------------
+    - name: Gather diagnostics for warning alerts
+      condition:
+        all:
+          - event.payload.status == "firing"
+          - event.payload.alerts[0].labels.severity == "warning"
+      action:
+        run_job_template:
+          name: "Gather Diagnostics"          # CUSTOMIZE
+          organization: "Default"             # CUSTOMIZE
+          job_args:
+            extra_vars:
+              alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
+              target_instance: "{{ event.payload.alerts[0].labels.instance | default('unknown') }}"
+              severity: "warning"
+
+    # -----------------------------------------------------------------------
+    # Rule 3: Resolved alerts -- notify team that issue cleared
+    # -----------------------------------------------------------------------
+    - name: Notify on resolved alerts
+      condition: event.payload.status == "resolved"
+      action:
+        run_job_template:
+          name: "Notify Team"                 # CUSTOMIZE
+          organization: "Default"             # CUSTOMIZE
+          job_args:
+            extra_vars:
+              alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
+              message: "Alert resolved: {{ event.payload.alerts[0].annotations.summary | default('') }}"
+              severity: "resolved"
+
+    # -----------------------------------------------------------------------
+    # Rule 4: Catch-all for debugging
+    # -----------------------------------------------------------------------
+    - name: Log unmatched alerts
+      condition: event.payload.alerts is defined
+      action:
+        debug:
+          msg: "Unrouted alert: {{ event.payload.status }} - {{ event.payload.alerts[0].labels.alertname | default('unknown') }}"

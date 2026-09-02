@@ -1,0 +1,39 @@
+---
+# ===========================================================================
+# Custom Source Plugin - Example Rulebook
+# ===========================================================================
+# Demonstrates using a custom event source plugin from your own collection.
+#
+# Prerequisites:
+#   - Custom source plugin built and packaged (see source-plugins/)
+#   - Collection installed in Decision Environment (see decision-environment/)
+#
+# CUSTOMIZE:
+#   - Replace "myorg.myeda.my_source" with your actual collection path
+#   - Adjust source parameters for your plugin
+#   - Update conditions to match your custom event structure
+# ===========================================================================
+
+- name: Custom Source - Example
+  hosts: all
+  sources:
+    # Reference your custom source plugin using its fully qualified name:
+    # <namespace>.<collection>.<plugin_name>
+    - myorg.myeda.my_source:                  # CUSTOMIZE: your collection path
+        interval: 10                          # CUSTOMIZE: plugin-specific parameters
+        threshold: 80
+
+  rules:
+    - name: React to custom events
+      condition: event.metric is defined and event.metric > 80
+      action:
+        debug:
+          msg: "Custom event received: metric={{ event.metric }}, source={{ event.source | default('unknown') }}"
+        # For production:
+        # run_job_template:
+        #   name: "Handle Custom Event"
+        #   organization: "Default"
+        #   job_args:
+        #     extra_vars:
+        #       metric_value: "{{ event.metric }}"
+        #       event_source: "{{ event.source }}"

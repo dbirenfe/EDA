@@ -1,0 +1,78 @@
+---
+# ===========================================================================
+# Webhook - Filtered Example
+# ===========================================================================
+# Listens for webhook events and routes them based on payload content.
+# Demonstrates:
+#   - Multiple rules in one rulebook
+#   - Condition filtering
+#   - Triggering job templates with extra_vars from event data
+#   - Catch-all fallback rule
+#
+# Expected payload format:
+#   {
+#     "action": "restart" | "scale" | ...,
+#     "host": "hostname",
+#     "service": "service-name",
+#     "severity": "critical" | "warning" | "info"
+#   }
+#
+# CUSTOMIZE:
+#   - Change job template names to match your AAP Controller
+#   - Change organization to match yours
+#   - Adjust conditions to your payload structure
+# ===========================================================================
+
+- name: Webhook - Filtered Event Routing
+  hosts: all
+  sources:
+    - ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 5000
+
+  rules:
+    # -----------------------------------------------------------------------
+    # Rule 1: Service restart request
+    # Fires when someone sends an event with action=restart
+    # -----------------------------------------------------------------------
+    - name: Handle service restart request
+      condition:
+        all:
+          - event.payload.action == "restart"
+          - event.payload.host is defined
+          - event.payload.service is defined
+      action:
+        run_job_template:
+          name: "Remediate Service"           # CUSTOMIZE: your job template name
+          organization: "Default"             # CUSTOMIZE: your organization
+          job_args:
+            extra_vars:
+              target_host: "{{ event.payload.host }}"
+              service_name: "{{ event.payload.service }}"
+
+    # -----------------------------------------------------------------------
+    # Rule 2: Critical severity escalation
+    # Fires when severity is critical, regardless of action
+    # -----------------------------------------------------------------------
+    - name: Escalate critical events
+      condition:
+        all:
+          - event.payload.severity is defined
+          - event.payload.severity == "critical"
+      action:
+        run_job_template:
+          name: "Notify Team"                 # CUSTOMIZE: your notification template
+          organization: "Default"             # CUSTOMIZE: your organization
+          job_args:
+            extra_vars:
+              alert_message: "CRITICAL event from {{ event.payload.host | default('unknown') }}"
+              severity: "{{ event.payload.severity }}"
+
+    # -----------------------------------------------------------------------
+    # Rule 3: Catch-all for unmatched events (useful for debugging)
+    # -----------------------------------------------------------------------
+    - name: Log unmatched events
+      condition: event.payload is defined
+      action:
+        debug:
+          msg: "Unmatched webhook event: {{ event.payload }}"

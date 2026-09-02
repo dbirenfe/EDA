@@ -1,0 +1,104 @@
+---
+# ===========================================================================
+# Gather Diagnostics
+# ===========================================================================
+# Collects system diagnostic information from the target host.
+# Useful as a first response to warning alerts before deciding on action.
+#
+# Expected extra_vars (passed by EDA):
+#   target_host:     hostname or IP to gather from
+#   alert_name:      (optional) triggering alert name for context
+#   target_instance: (optional) alternative to target_host
+# ===========================================================================
+
+- name: Gather system diagnostics
+  hosts: "{{ target_host | default(target_instance | default('localhost')) }}"
+  gather_facts: true
+  become: true
+
+  vars:
+    diagnostics_dir: /tmp/eda-diagnostics
+    alert_name: "{{ alert_name | default('manual') }}"
+
+  tasks:
+    - name: Create diagnostics directory
+      ansible.builtin.file:
+        path: "{{ diagnostics_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Collect system uptime
+      ansible.builtin.command: uptime
+      register: uptime_output
+      changed_when: false
+
+    - name: Collect disk usage
+      ansible.builtin.command: df -h
+      register: disk_output
+      changed_when: false
+
+    - name: Collect memory usage
+      ansible.builtin.command: free -m
+      register: memory_output
+      changed_when: false
+
+    - name: Collect top processes by CPU
+      ansible.builtin.shell: ps aux --sort=-%cpu | head -20
+      register: top_cpu_output
+      changed_when: false
+
+    - name: Collect top processes by memory
+      ansible.builtin.shell: ps aux --sort=-%mem | head -20
+      register: top_mem_output
+      changed_when: false
+
+    - name: Collect failed systemd services
+      ansible.builtin.command: systemctl --failed --no-pager
+      register: failed_services_output
+      changed_when: false
+
+    - name: Collect recent journal errors
+      ansible.builtin.command: journalctl -p err --since "1 hour ago" --no-pager -n 50
+      register: journal_output
+      changed_when: false
+
+    - name: Write diagnostics report
+      ansible.builtin.copy:
+        content: |
+          ============================================
+          EDA Diagnostics Report
+          Host: {{ inventory_hostname }}
+          Alert: {{ alert_name }}
+          Time: {{ ansible_date_time.iso8601 }}
+          ============================================
+
+          --- UPTIME ---
+          {{ uptime_output.stdout }}
+
+          --- DISK USAGE ---
+          {{ disk_output.stdout }}
+
+          --- MEMORY ---
+          {{ memory_output.stdout }}
+
+          --- TOP CPU PROCESSES ---
+          {{ top_cpu_output.stdout }}
+
+          --- TOP MEMORY PROCESSES ---
+          {{ top_mem_output.stdout }}
+
+          --- FAILED SERVICES ---
+          {{ failed_services_output.stdout }}
+
+          --- RECENT JOURNAL ERRORS ---
+          {{ journal_output.stdout }}
+        dest: "{{ diagnostics_dir }}/report-{{ ansible_date_time.epoch }}.txt"
+        mode: "0644"
+
+    - name: Display diagnostics summary
+      ansible.builtin.debug:
+        msg:
+          - "Diagnostics collected for {{ inventory_hostname }}"
+          - "Uptime: {{ uptime_output.stdout }}"
+          - "Failed services: {{ failed_services_output.stdout_lines | length }} lines"
+          - "Report saved to {{ diagnostics_dir }}/"
