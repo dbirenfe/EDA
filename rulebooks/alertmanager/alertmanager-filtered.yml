@@ -29,10 +29,7 @@
     # Rule 1: Critical firing alerts -- immediate remediation
     # -----------------------------------------------------------------------
     - name: Remediate critical firing alerts
-      condition:
-        all:
-          - event.payload.status == "firing"
-          - event.payload.alerts[0].labels.severity == "critical"
+      condition: event.payload.status == "firing" and event.payload.alerts[0].labels.severity == "critical"
       action:
         run_job_template:
           name: "Remediate Service"           # CUSTOMIZE
@@ -48,10 +45,7 @@
     # Rule 2: Warning firing alerts -- gather diagnostics
     # -----------------------------------------------------------------------
     - name: Gather diagnostics for warning alerts
-      condition:
-        all:
-          - event.payload.status == "firing"
-          - event.payload.alerts[0].labels.severity == "warning"
+      condition: event.payload.status == "firing" and event.payload.alerts[0].labels.severity == "warning"
       action:
         run_job_template:
           name: "Gather Diagnostics"          # CUSTOMIZE

@@ -36,11 +36,7 @@
     # Fires when someone sends an event with action=restart
     # -----------------------------------------------------------------------
     - name: Handle service restart request
-      condition:
-        all:
-          - event.payload.action == "restart"
-          - event.payload.host is defined
-          - event.payload.service is defined
+      condition: event.payload.action == "restart" and event.payload.host is defined and event.payload.service is defined
       action:
         run_job_template:
           name: "Remediate Service"           # CUSTOMIZE: your job template name
@@ -55,10 +51,7 @@
     # Fires when severity is critical, regardless of action
     # -----------------------------------------------------------------------
     - name: Escalate critical events
-      condition:
-        all:
-          - event.payload.severity is defined
-          - event.payload.severity == "critical"
+      condition: event.payload.severity is defined and event.payload.severity == "critical"
       action:
         run_job_template:
           name: "Notify Team"                 # CUSTOMIZE: your notification template
