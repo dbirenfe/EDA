@@ -18,7 +18,7 @@
 
   vars:
     diagnostics_dir: /tmp/eda-diagnostics
-    alert_name: "{{ alert_name | default('manual') }}"
+    _alert_name: "{{ alert_name | default('manual') }}"
 
   tasks:
     - name: Create diagnostics directory
@@ -68,7 +68,7 @@
           ============================================
           EDA Diagnostics Report
           Host: {{ inventory_hostname }}
-          Alert: {{ alert_name }}
+          Alert: {{ _alert_name }}
           Time: {{ ansible_date_time.iso8601 }}
           ============================================
 

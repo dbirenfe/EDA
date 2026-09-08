@@ -20,25 +20,25 @@
   gather_facts: false
 
   vars:
-    alert_name: "{{ alert_name | default('Unknown Alert') }}"
-    severity: "{{ severity | default('warning') }}"
-    target_host: "{{ target_host | default('unknown') }}"
-    alert_summary: "{{ alert_summary | default('No summary provided') }}"
+    _alert_name: "{{ alert_name | default('Unknown Alert') }}"
+    _severity: "{{ severity | default('warning') }}"
+    _target_host: "{{ target_host | default('unknown') }}"
+    _alert_summary: "{{ alert_summary | default('No summary provided') }}"
 
   tasks:
     - name: Build ticket payload
       ansible.builtin.set_fact:
         ticket_data:
-          title: "[EDA] {{ alert_name }} on {{ target_host }}"
+          title: "[EDA] {{ _alert_name }} on {{ _target_host }}"
           description: |
             Automated ticket created by Event-Driven Ansible.
 
-            Alert: {{ alert_name }}
-            Severity: {{ severity }}
-            Host: {{ target_host }}
-            Summary: {{ alert_summary }}
+            Alert: {{ _alert_name }}
+            Severity: {{ _severity }}
+            Host: {{ _target_host }}
+            Summary: {{ _alert_summary }}
             Time: {{ ansible_date_time.iso8601 | default(lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ')) }}
-          priority: "{{ 'high' if severity == 'critical' else 'medium' }}"
+          priority: "{{ 'high' if _severity == 'critical' else 'medium' }}"
 
     - name: Display ticket that would be created
       ansible.builtin.debug:
