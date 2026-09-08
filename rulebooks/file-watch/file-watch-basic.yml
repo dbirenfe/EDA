@@ -23,15 +23,15 @@
   hosts: all
   sources:
     - ansible.eda.file_watch:
-        path: /tmp/eda-watch                  # CUSTOMIZE: directory to monitor
-        recursive: true
+        path: /tmp                            # CUSTOMIZE: directory to monitor
+        recursive: false
 
   rules:
     # -----------------------------------------------------------------------
     # Rule 1: New file created
     # -----------------------------------------------------------------------
     - name: React to new files
-      condition: event.type == "created" and event.is_directory == false
+      condition: event.type == "created" and event.src_path is match("/tmp/eda-.*")
       action:
         debug:
           msg: "New file created: {{ event.src_path }}"
@@ -47,7 +47,7 @@
     # Rule 2: Config file modified
     # -----------------------------------------------------------------------
     - name: React to config modifications
-      condition: event.type == "modified" and event.src_path is match(".*\\.conf$")
+      condition: event.type == "modified" and event.src_path is match("/tmp/eda-.*\\.conf$")
       action:
         debug:
           msg: "Config file modified: {{ event.src_path }}"
@@ -63,7 +63,7 @@
     # Rule 3: File deleted (potential security event)
     # -----------------------------------------------------------------------
     - name: Alert on file deletion
-      condition: event.type == "deleted"
+      condition: event.type == "deleted" and event.src_path is match("/tmp/eda-.*")
       action:
         debug:
           msg: "File deleted: {{ event.src_path }}"
