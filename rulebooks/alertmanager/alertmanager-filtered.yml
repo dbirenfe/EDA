@@ -21,8 +21,8 @@
   hosts: all
   sources:
     - ansible.eda.alertmanager:
-        host: 0.0.0.0
-        port: 8000
+        host: "{{ alertmanager_host | default('0.0.0.0') }}"
+        port: "{{ alertmanager_port | default(8000) }}"
 
   rules:
     # -----------------------------------------------------------------------
@@ -32,8 +32,8 @@
       condition: event.payload.status == "firing" and event.payload.alerts[0].labels.severity == "critical"
       action:
         run_job_template:
-          name: "Remediate Service"           # CUSTOMIZE
-          organization: "Default"             # CUSTOMIZE
+          name: "{{ remediate_template | default('Remediate Service') }}"
+          organization: "{{ aap_organization | default('Default') }}"
           job_args:
             extra_vars:
               alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
@@ -48,8 +48,8 @@
       condition: event.payload.status == "firing" and event.payload.alerts[0].labels.severity == "warning"
       action:
         run_job_template:
-          name: "Gather Diagnostics"          # CUSTOMIZE
-          organization: "Default"             # CUSTOMIZE
+          name: "{{ diagnostics_template | default('Gather Diagnostics') }}"
+          organization: "{{ aap_organization | default('Default') }}"
           job_args:
             extra_vars:
               alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
@@ -63,8 +63,8 @@
       condition: event.payload.status == "resolved"
       action:
         run_job_template:
-          name: "Notify Team"                 # CUSTOMIZE
-          organization: "Default"             # CUSTOMIZE
+          name: "{{ notify_template | default('Notify Team') }}"
+          organization: "{{ aap_organization | default('Default') }}"
           job_args:
             extra_vars:
               alert_name: "{{ event.payload.alerts[0].labels.alertname }}"

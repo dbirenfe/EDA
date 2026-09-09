@@ -20,8 +20,8 @@
   hosts: all
   sources:
     - ansible.eda.alertmanager:
-        host: 0.0.0.0
-        port: 8000
+        host: "{{ alertmanager_host | default('0.0.0.0') }}"
+        port: "{{ alertmanager_port | default(8000) }}"
 
   rules:
     - name: Log every alert

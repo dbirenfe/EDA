@@ -42,18 +42,23 @@ eda_controller:
   api_port: 443
 
 # ---------------------------------------------------------------------------
-# Webhook listener defaults
+# Rulebook variables (set as extra_vars on activations)
 # ---------------------------------------------------------------------------
-webhook:
-  host: "0.0.0.0"
-  port: 5000
-
-# ---------------------------------------------------------------------------
-# Alertmanager source defaults
-# ---------------------------------------------------------------------------
-alertmanager:
-  host: "0.0.0.0"
-  port: 8000
+# These are the variable names used in the rulebooks. Set them as
+# "Extra variables" when creating a Rulebook Activation in EDA Controller,
+# or pass via --extra-vars on the CLI.
+#
+# Source plugin settings:
+#   webhook_host: "0.0.0.0"
+#   webhook_port: 5000
+#   alertmanager_host: "0.0.0.0"
+#   alertmanager_port: 8000
+#
+# Job template names (must match templates in AAP Controller):
+#   remediate_template: "Remediate Service"
+#   notify_template: "Notify Team"
+#   diagnostics_template: "Gather Diagnostics"
+#   aap_organization: "Default"
 
 # ---------------------------------------------------------------------------
 # Container registry (Quay)
