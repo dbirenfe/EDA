@@ -17,7 +17,7 @@ Built for teams working in **offline / air-gapped environments** -- every templa
 | `alertmanager/alertmanager-basic.yml` | Alertmanager | ✅ Tested | Catches all alerts, prints details |
 | `alertmanager/alertmanager-filtered.yml` | Alertmanager | ✅ Tested | Routes by severity → remediate/diagnose/notify |
 | `file-watch/file-watch-basic.yml` | File Watch | ✅ Tested | Monitors directory for file create/modify/delete |
-| `file-watch/journald-basic.yml` | Journald | ⚠️ Deprecated | Needs `community.eda` collection |
+| `file-watch/journald-basic.yml` | Journald | ✅ Ready | Uses `community.eda` (include in custom DE) |
 | `custom-source/custom-source-example.yml` | Custom | 📝 Skeleton | Template for writing your own source plugin |
 
 ---

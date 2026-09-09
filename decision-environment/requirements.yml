@@ -10,8 +10,11 @@
 # ===========================================================================
 
 collections:
-  # Core EDA collection -- provides webhook, alertmanager, file_watch, journald source plugins
+  # Core EDA collection -- provides webhook, alertmanager source plugins
   - name: ansible.eda
+
+  # Community EDA collection -- provides file_watch, journald (replaces deprecated ansible.eda versions)
+  - name: community.eda
 
   # Add your custom collections below:
   # - name: myorg.myeda

@@ -22,7 +22,7 @@
 - name: File Watch - Monitor Directory
   hosts: all
   sources:
-    - ansible.eda.file_watch:
+    - community.eda.file_watch:
         path: /tmp                            # CUSTOMIZE: directory to monitor
         recursive: false
 

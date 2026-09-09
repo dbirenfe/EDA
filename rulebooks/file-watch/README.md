@@ -1,9 +1,9 @@
 # File Watch & Journald Rulebooks
 
-> **Note:** As of `ansible.eda` collection v2.x, the `file_watch` and `journald` source plugins
-> are **deprecated** and will be removed in v3.0.0. Use `community.eda.file_watch` and
-> `community.eda.journald` instead. You'll need to include the `community.eda` collection
-> in your Decision Environment (see `decision-environment/requirements.yml`).
+> **Note:** The `file_watch` and `journald` plugins in `ansible.eda` are deprecated as of v2.x.
+> This repo uses `community.eda.file_watch` and `community.eda.journald` instead.
+> The `community.eda` collection is included in `decision-environment/requirements.yml`
+> -- make sure your custom Decision Environment includes it.
 
 ## File Watch
 
