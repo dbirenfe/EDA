@@ -1,8 +1,13 @@
 # File Watch & Journald Rulebooks
 
+> **Note:** As of `ansible.eda` collection v2.x, the `file_watch` and `journald` source plugins
+> are **deprecated** and will be removed in v3.0.0. Use `community.eda.file_watch` and
+> `community.eda.journald` instead. You'll need to include the `community.eda` collection
+> in your Decision Environment (see `decision-environment/requirements.yml`).
+
 ## File Watch
 
-The `ansible.eda.file_watch` source plugin monitors files and directories for changes using `inotify`.
+The `ansible.eda.file_watch` (or `community.eda.file_watch`) source plugin monitors files and directories for changes using `inotify`.
 
 ### Event Structure
 
