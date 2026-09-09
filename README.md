@@ -4,6 +4,22 @@ A comprehensive, self-contained reference repository for **Event-Driven Ansible*
 
 Built for teams working in **offline / air-gapped environments** -- every template is generic, and all environment-specific values live in a single config file (`vars/env-config.yml`).
 
+**All rulebooks tested end-to-end on OCP 4.20 with AAP 2.6.**
+
+---
+
+## Tested Rulebooks
+
+| Rulebook | Source | Status | What It Does |
+|----------|--------|--------|-------------|
+| `webhook/webhook-basic.yml` | Webhook | ✅ Tested | Catches all webhook events, prints payload |
+| `webhook/webhook-filtered.yml` | Webhook | ✅ Tested | Routes events by conditions → triggers job templates |
+| `alertmanager/alertmanager-basic.yml` | Alertmanager | ✅ Tested | Catches all alerts, prints details |
+| `alertmanager/alertmanager-filtered.yml` | Alertmanager | ✅ Tested | Routes by severity → remediate/diagnose/notify |
+| `file-watch/file-watch-basic.yml` | File Watch | ✅ Tested | Monitors directory for file create/modify/delete |
+| `file-watch/journald-basic.yml` | Journald | ⚠️ Deprecated | Needs `community.eda` collection |
+| `custom-source/custom-source-example.yml` | Custom | 📝 Skeleton | Template for writing your own source plugin |
+
 ---
 
 ## Who Is This For?
@@ -14,6 +30,7 @@ Built for teams working in **offline / air-gapped environments** -- every templa
 | **Know Ansible, new to EDA** | [Key Concepts](docs/03-key-concepts.md) then [Quick Start](docs/04-quick-start.md) |
 | **Experienced** -- just need skeletons | Jump straight to [rulebooks/](rulebooks/) and [playbooks/](playbooks/) |
 | **Setting up offline** | [Offline Setup Guide](docs/06-offline-setup.md) |
+| **Hit a weird bug?** | [Lessons Learned](docs/08-lessons-learned.md) -- real issues found during testing |
 
 ---
 
@@ -28,7 +45,8 @@ Built for teams working in **offline / air-gapped environments** -- every templa
 │   ├── 04-quick-start.md          # Get running fast
 │   ├── 05-decision-environments.md# Decision Environments explained
 │   ├── 06-offline-setup.md        # Air-gapped / offline deployment
-│   └── 07-troubleshooting.md      # Common issues & fixes
+│   ├── 07-troubleshooting.md      # Common issues & fixes
+│   └── 08-lessons-learned.md      # Gotchas found during real testing
 │
 ├── rulebooks/                     # Ready-to-use rulebook templates
 │   ├── webhook/                   # Webhook event source examples
@@ -76,7 +94,7 @@ Built for teams working in **offline / air-gapped environments** -- every templa
 
 ```bash
 git clone <this-repo-url>
-cd eda-reference
+cd EDA
 
 # Edit environment-specific values (controller URLs, registry, ports)
 vi vars/env-config.yml
@@ -85,7 +103,6 @@ vi vars/env-config.yml
 ### 2. Pick a rulebook
 
 ```bash
-# List available rulebooks
 find rulebooks/ -name '*.yml' | sort
 ```
 
@@ -100,9 +117,10 @@ ansible-rulebook --rulebook rulebooks/webhook/webhook-basic.yml \
 ### 4. Import into EDA Controller
 
 1. Create a **Project** in EDA Controller pointing to this Git repo.
-2. Create a **Rulebook Activation** using one of the rulebooks.
-3. Assign a **Decision Environment** (see [DE docs](docs/05-decision-environments.md)).
-4. Enable the activation and send a test event (see [scripts/](scripts/)).
+2. Create a **Decision Environment** (default DE or custom).
+3. Create an **AAP Controller credential** (controller route URL + controller-specific token).
+4. Create a **Rulebook Activation** using one of the rulebooks.
+5. Enable the activation and send a test event (see [scripts/](scripts/)).
 
 ---
 
@@ -118,11 +136,21 @@ See [Offline Setup Guide](docs/06-offline-setup.md) for air-gapped deployment in
 
 ---
 
+## Key Gotchas (Save Yourself Hours)
+
+1. **Use `and` not `all:`** for multiple conditions on one event. See [Lessons Learned #1](docs/08-lessons-learned.md#1-condition-syntax-and-vs-all).
+2. **File watch uses `event.change`** not `event.type`. See [Lessons Learned #3](docs/08-lessons-learned.md#3-file-watch-event-structure).
+3. **Avoid self-referencing vars** in playbooks when EDA passes extra_vars. See [Lessons Learned #2](docs/08-lessons-learned.md#2-playbook-variable-self-reference).
+4. **EDA credentials** point to controller route directly, not gateway. See [Lessons Learned #4](docs/08-lessons-learned.md#4-aap-26-gateway-architecture).
+
+---
+
 ## Version Compatibility
 
-| Component | Version |
-|-----------|---------|
+| Component | Tested Version |
+|-----------|---------------|
 | Ansible Automation Platform | 2.6 |
 | EDA Controller | 1.2.1 |
+| OCP | 4.20 |
 | ansible-rulebook | 1.x |
 | Decision Environment base | `de-supported-rhel9:latest` |

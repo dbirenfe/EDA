@@ -2,28 +2,43 @@
 # ===========================================================================
 # Environment Configuration for EDA
 # ===========================================================================
-# Copy this file and adjust values for each environment.
-# This file is the SINGLE SOURCE OF TRUTH for environment-specific settings.
-# Rulebooks, playbooks, and scripts reference these values so you only
-# change them in one place when moving between environments.
+# EDIT THIS FILE for each environment. This is the SINGLE SOURCE OF TRUTH
+# for environment-specific settings. Rulebooks, playbooks, and scripts
+# reference these values so you only change them here.
+#
+# When moving to your offline environment:
+#   1. Update all URLs below to match your internal infrastructure
+#   2. Set air_gapped: true
+#   3. Update registry settings to your Quay instance
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
-# AAP Controller connection
+# AAP Platform Gateway (unified UI)
 # ---------------------------------------------------------------------------
+# In AAP 2.6+, the gateway provides the unified UI and proxies to
+# controller/EDA. This is the URL users access in their browser.
+aap_gateway:
+  host: "https://aap.example.com"              # CHANGE: your gateway route URL
+
+# ---------------------------------------------------------------------------
+# AAP Controller connection (used by EDA credentials)
+# ---------------------------------------------------------------------------
+# IMPORTANT: In AAP 2.6, EDA connects to the controller via its direct
+# route, NOT through the gateway. Use a controller-specific token
+# (created via gateway UI → user → Personal Access Tokens, then
+#  create another via Automation Execution → Controller API tokens).
 aap_controller:
-  host: "https://controller.example.com"
-  # Username used by EDA Controller to trigger job templates.
-  # In production, use a credential/token instead of password.
+  host: "https://controller.example.com"       # CHANGE: your controller route URL
+  # For internal cluster access (faster, no TLS overhead):
+  # host: "http://aap-controller-service.<namespace>.svc.cluster.local"
   username: "eda-service-account"
-  validate_certs: true                 # set to false for self-signed certs
+  validate_certs: false                        # set true if using proper certs
 
 # ---------------------------------------------------------------------------
 # EDA Controller
 # ---------------------------------------------------------------------------
 eda_controller:
-  host: "https://eda.example.com"
-  # Port the EDA Controller API listens on (default 443 behind reverse proxy)
+  host: "https://eda.example.com"              # CHANGE: your EDA route URL
   api_port: 443
 
 # ---------------------------------------------------------------------------
@@ -44,20 +59,16 @@ alertmanager:
 # Container registry (Quay)
 # ---------------------------------------------------------------------------
 registry:
-  host: "quay.example.com"
+  host: "quay.example.com"                     # CHANGE: your Quay hostname
   namespace: "eda"
-  # Decision Environment image name
   de_image: "custom-de"
   de_tag: "latest"
-  # Full image reference: {{ registry.host }}/{{ registry.namespace }}/{{ registry.de_image }}:{{ registry.de_tag }}
+  # Full image: {{ registry.host }}/{{ registry.namespace }}/{{ registry.de_image }}:{{ registry.de_tag }}
 
 # ---------------------------------------------------------------------------
 # Offline / Air-gapped settings
 # ---------------------------------------------------------------------------
 offline:
-  # Path to mirrored collections on the target host
   collections_path: "/opt/ansible/collections"
-  # Private Automation Hub URL (if available)
-  private_hub_url: "https://hub.example.com"
-  # Set to true if no outbound internet is available
+  private_hub_url: "https://hub.example.com"   # CHANGE: your Private Hub URL
   air_gapped: true
