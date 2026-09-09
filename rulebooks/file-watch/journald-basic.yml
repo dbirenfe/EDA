@@ -23,7 +23,7 @@
 - name: Journald - Monitor System Logs
   hosts: all
   sources:
-    - community.eda.journald:
+    - ansible.eda.journald:                     # Use community.eda.journald in custom DE
         match: "SYSLOG_IDENTIFIER=sshd"      # CUSTOMIZE: service to monitor
 
   rules:
