@@ -1,79 +1,42 @@
 ---
 # ===========================================================================
-# Environment Configuration for EDA
+# Environment Configuration for EDA Rulebooks
 # ===========================================================================
-# EDIT THIS FILE for each environment. This is the SINGLE SOURCE OF TRUTH
-# for environment-specific settings. Rulebooks, playbooks, and scripts
-# reference these values so you only change them here.
+# This file is loaded directly by ansible-rulebook:
+#   CLI:            ansible-rulebook --vars vars/env-config.yml ...
+#   EDA Controller: paste contents into activation "Extra Variables" field
 #
-# When moving to your offline environment:
-#   1. Update all URLs below to match your internal infrastructure
-#   2. Set air_gapped: true
-#   3. Update registry settings to your Quay instance
+# Variables must be FLAT (no nesting) for rulebooks to access them.
+# In sources/actions: use {{ var_name }}
+# In conditions:      use vars.var_name
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
-# AAP Platform Gateway (unified UI)
+# Source plugin settings
 # ---------------------------------------------------------------------------
-# In AAP 2.6+, the gateway provides the unified UI and proxies to
-# controller/EDA. This is the URL users access in their browser.
-aap_gateway:
-  host: "https://aap.example.com"              # CHANGE: your gateway route URL
+webhook_host: "0.0.0.0"
+webhook_port: 5000
+alertmanager_host: "0.0.0.0"
+alertmanager_port: 8000
 
 # ---------------------------------------------------------------------------
-# AAP Controller connection (used by EDA credentials)
+# Job template names (must match templates in AAP Controller)
 # ---------------------------------------------------------------------------
-# IMPORTANT: In AAP 2.6, EDA connects to the controller via its direct
-# route, NOT through the gateway. Use a controller-specific token
-# (created via gateway UI → user → Personal Access Tokens, then
-#  create another via Automation Execution → Controller API tokens).
-aap_controller:
-  host: "https://controller.example.com"       # CHANGE: your controller route URL
-  # For internal cluster access (faster, no TLS overhead):
-  # host: "http://aap-controller-service.<namespace>.svc.cluster.local"
-  username: "eda-service-account"
-  validate_certs: false                        # set true if using proper certs
+remediate_template: "Remediate Service"
+notify_template: "Notify Team"
+diagnostics_template: "Gather Diagnostics"
+aap_organization: "Default"
 
 # ---------------------------------------------------------------------------
-# EDA Controller
+# AAP connection (reference for credential setup, not used by rulebooks)
 # ---------------------------------------------------------------------------
-eda_controller:
-  host: "https://eda.example.com"              # CHANGE: your EDA route URL
-  api_port: 443
+# aap_gateway_url: "https://aap.example.com"
+# aap_controller_url: "https://controller.example.com"
 
 # ---------------------------------------------------------------------------
-# Rulebook variables (set as extra_vars on activations)
+# Container registry (reference for DE build, not used by rulebooks)
 # ---------------------------------------------------------------------------
-# These are the variable names used in the rulebooks. Set them as
-# "Extra variables" when creating a Rulebook Activation in EDA Controller,
-# or pass via --extra-vars on the CLI.
-#
-# Source plugin settings:
-#   webhook_host: "0.0.0.0"
-#   webhook_port: 5000
-#   alertmanager_host: "0.0.0.0"
-#   alertmanager_port: 8000
-#
-# Job template names (must match templates in AAP Controller):
-#   remediate_template: "Remediate Service"
-#   notify_template: "Notify Team"
-#   diagnostics_template: "Gather Diagnostics"
-#   aap_organization: "Default"
-
-# ---------------------------------------------------------------------------
-# Container registry (Quay)
-# ---------------------------------------------------------------------------
-registry:
-  host: "quay.example.com"                     # CHANGE: your Quay hostname
-  namespace: "eda"
-  de_image: "custom-de"
-  de_tag: "latest"
-  # Full image: {{ registry.host }}/{{ registry.namespace }}/{{ registry.de_image }}:{{ registry.de_tag }}
-
-# ---------------------------------------------------------------------------
-# Offline / Air-gapped settings
-# ---------------------------------------------------------------------------
-offline:
-  collections_path: "/opt/ansible/collections"
-  private_hub_url: "https://hub.example.com"   # CHANGE: your Private Hub URL
-  air_gapped: true
+# registry_host: "quay.example.com"
+# registry_namespace: "eda"
+# de_image: "custom-de"
+# de_tag: "latest"
