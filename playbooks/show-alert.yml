@@ -1,0 +1,32 @@
+---
+# ===========================================================================
+# Show Alert Message
+# ===========================================================================
+# Simple playbook that prints the alert details received from EDA.
+# Used for demo/testing the OCP Alertmanager → EDA → Controller flow.
+# ===========================================================================
+
+- name: Show alert from EDA
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Display alert details
+      ansible.builtin.debug:
+        msg:
+          - "========================================="
+          - "  ALERT RECEIVED VIA EDA"
+          - "========================================="
+          - "Alert Name:  {{ _alert_name }}"
+          - "Severity:    {{ _severity }}"
+          - "Instance:    {{ _instance }}"
+          - "Status:      {{ _status }}"
+          - "Summary:     {{ _summary }}"
+          - "========================================="
+      vars:
+        _alert_name: "{{ alert_name | default('unknown') }}"
+        _severity: "{{ severity | default('unknown') }}"
+        _instance: "{{ instance | default('unknown') }}"
+        _status: "{{ status | default('unknown') }}"
+        _summary: "{{ summary | default('No summary provided') }}"

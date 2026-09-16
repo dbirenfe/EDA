@@ -1,0 +1,40 @@
+---
+# ===========================================================================
+# OCP Alertmanager Demo
+# ===========================================================================
+# Receives real alerts from OCP's built-in Alertmanager and triggers a
+# job template that prints the alert details.
+#
+# Setup:
+#   1. Create job template "Show Alert" → playbooks/show-alert.yml
+#   2. Configure OCP Alertmanager to send webhooks to this activation
+#   3. Create a PrometheusRule to fire a test alert
+# ===========================================================================
+
+- name: OCP Alertmanager - Demo
+  hosts: all
+  sources:
+    - ansible.eda.alertmanager:
+        host: "{{ alertmanager_host | default('0.0.0.0') }}"
+        port: "{{ alertmanager_port | default(8000) }}"
+
+  rules:
+    - name: Show any firing alert
+      condition: event.payload.status == "firing"
+      action:
+        run_job_template:
+          name: "{{ show_alert_template | default('Show Alert') }}"
+          organization: "{{ aap_organization | default('Default') }}"
+          job_args:
+            extra_vars:
+              alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
+              severity: "{{ event.payload.alerts[0].labels.severity | default('unknown') }}"
+              instance: "{{ event.payload.alerts[0].labels.instance | default('unknown') }}"
+              status: "{{ event.payload.status }}"
+              summary: "{{ event.payload.alerts[0].annotations.summary | default('No summary') }}"
+
+    - name: Log resolved alerts
+      condition: event.payload.status == "resolved"
+      action:
+        debug:
+          msg: "Alert resolved: {{ event.payload.alerts[0].labels.alertname | default('unknown') }}"
