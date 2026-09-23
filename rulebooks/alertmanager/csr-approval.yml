@@ -1,0 +1,33 @@
+---
+# ===========================================================================
+# CSR Auto-Approval on AlertingDegraded
+# ===========================================================================
+# When OCP fires an AlertingDegraded alert (often caused by expired certs
+# and pending CSRs), this rulebook triggers the CSR approval job template.
+#
+# Setup:
+#   1. Ensure your CSR approval job template exists in AAP Controller
+#   2. Set csr_approval_template to match your template name
+#   3. Configure Alertmanager to send AlertingDegraded to this activation
+# ===========================================================================
+
+- name: CSR Auto-Approval on AlertingDegraded
+  hosts: all
+  sources:
+    - ansible.eda.alertmanager:
+        host: "{{ alertmanager_host | default('0.0.0.0') }}"
+        port: "{{ alertmanager_port | default(8000) }}"
+
+  rules:
+    - name: Approve CSRs on AlertingDegraded
+      condition: event.payload.status == "firing" and event.payload.alerts[0].labels.alertname == "AlertingDegraded"
+      action:
+        run_job_template:
+          name: "{{ csr_approval_template | default('CSR Approval') }}"
+          organization: "{{ aap_organization | default('Default') }}"
+
+    - name: Log when AlertingDegraded resolves
+      condition: event.payload.status == "resolved" and event.payload.alerts[0].labels.alertname == "AlertingDegraded"
+      action:
+        debug:
+          msg: "AlertingDegraded resolved -- CSRs likely approved successfully"
