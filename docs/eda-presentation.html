@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event-Driven Ansible (EDA) - Team Presentation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+  .slide { display: none; min-height: 100vh; padding: 60px 80px; flex-direction: column; justify-content: center; }
+  .slide.active { display: flex; }
+
+  h1 { font-size: 2.4em; font-weight: 700; color: #fff; margin-bottom: 16px; }
+  h2 { font-size: 1.6em; font-weight: 600; color: #e0e0e0; margin: 24px 0 12px; }
+  h3 { font-size: 1.2em; font-weight: 600; color: #c0c0c0; margin: 16px 0 8px; }
+  p, li { font-size: 1.1em; line-height: 1.7; color: #b0b0b0; }
+  p { margin-bottom: 12px; }
+
+  .subtitle { color: #6c8ebf; font-size: 1.3em; margin-bottom: 32px; }
+  .tag-line { color: #555; font-size: 0.9em; margin-top: 40px; }
+
+  .flow-box {
+    background: #16213e; border: 1px solid #2a3a5c; border-radius: 8px;
+    padding: 24px 32px; margin: 20px 0; font-family: 'Courier New', monospace;
+    font-size: 1.1em; line-height: 2; color: #8be9fd;
+  }
+
+  .callout {
+    background: #2a1a0a; border-left: 4px solid #e6a817; border-radius: 0 8px 8px 0;
+    padding: 16px 24px; margin: 16px 0;
+  }
+  .callout.info { background: #0a1a2a; border-left-color: #4a9eff; }
+  .callout.success { background: #0a2a1a; border-left-color: #4ae64a; }
+  .callout-title { font-weight: 600; color: #e6a817; margin-bottom: 4px; }
+  .callout.info .callout-title { color: #4a9eff; }
+  .callout.success .callout-title { color: #4ae64a; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th { background: #16213e; color: #6c8ebf; text-align: left; padding: 12px 16px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 10px 16px; border-bottom: 1px solid #2a3a5c; font-size: 0.95em; }
+  tr:hover td { background: #16213e40; }
+
+  .stats { display: flex; gap: 24px; margin: 20px 0; }
+  .stat { flex: 1; text-align: center; padding: 20px; background: #16213e; border-radius: 8px; border: 1px solid #2a3a5c; }
+  .stat-value { font-size: 1.8em; font-weight: 700; color: #4ae64a; }
+  .stat-value.blue { color: #4a9eff; }
+  .stat-value.yellow { color: #e6a817; }
+  .stat-label { font-size: 0.85em; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-card { background: #16213e; border: 1px solid #2a3a5c; border-radius: 8px; padding: 20px; }
+  .grid-card h3 { color: #6c8ebf; margin: 0 0 8px; font-size: 1em; }
+  .grid-card p { font-size: 0.9em; margin: 0; }
+
+  .pill { display: inline-block; padding: 4px 14px; border-radius: 12px; font-size: 0.8em; font-weight: 600; margin: 4px; }
+  .pill.blue { background: #1a3a5c; color: #4a9eff; }
+  .pill.yellow { background: #3a2a0a; color: #e6a817; }
+  .pill.green { background: #0a3a1a; color: #4ae64a; }
+
+  code { background: #16213e; padding: 2px 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.9em; color: #8be9fd; }
+
+  pre {
+    background: #0d1117; border: 1px solid #2a3a5c; border-radius: 8px;
+    padding: 20px; margin: 16px 0; font-family: 'Courier New', monospace;
+    font-size: 0.85em; line-height: 1.8; color: #c9d1d9; overflow-x: auto;
+  }
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cmt { color: #6a737d; }
+
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0; background: #0d1117;
+    border-top: 1px solid #2a3a5c; padding: 12px 40px; display: flex;
+    justify-content: space-between; align-items: center; z-index: 100;
+  }
+  .nav button {
+    background: #16213e; color: #e0e0e0; border: 1px solid #2a3a5c;
+    padding: 8px 24px; border-radius: 6px; cursor: pointer; font-size: 0.95em;
+    transition: background 0.2s;
+  }
+  .nav button:hover { background: #1a3a5c; }
+  .nav button.primary { background: #1a4a8c; border-color: #2a5aac; }
+  .nav button.primary:hover { background: #2a5aac; }
+  .nav .counter { color: #666; font-size: 0.9em; }
+  .nav .dots { display: flex; gap: 6px; }
+  .nav .dot { width: 8px; height: 8px; border-radius: 50%; background: #2a3a5c; cursor: pointer; transition: background 0.2s; }
+  .nav .dot.active { background: #4a9eff; }
+
+  .center { text-align: center; }
+  .divider { border: none; border-top: 1px solid #2a3a5c; margin: 24px 0; }
+
+  @media (max-width: 768px) {
+    .slide { padding: 30px 20px; }
+    h1 { font-size: 1.6em; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .stats { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Slide 0: Title -->
+<div class="slide active" id="s0">
+  <div class="center" style="padding: 40px 0">
+    <h1 style="font-size: 3em">Event-Driven Ansible</h1>
+    <p class="subtitle">From reactive to proactive automation</p>
+    <hr class="divider" style="max-width: 200px; margin: 32px auto">
+    <p class="tag-line">AAP 2.6 / EDA Controller 1.2.1 &mdash; Team Knowledge Share</p>
+  </div>
+</div>
+
+<!-- Slide 1: The Problem -->
+<div class="slide" id="s1">
+  <h1>The Problem</h1>
+  <p>Traditional automation is <strong>reactive by request</strong> &mdash; someone notices an issue, logs in, and runs a playbook.</p>
+  <div class="flow-box">
+    Problem occurs &rarr; Human notices &rarr; Human decides &rarr; Human runs playbook &rarr; Fixed
+  </div>
+  <div class="callout">
+    <div class="callout-title">The Gap</div>
+    <p>Minutes, hours, or days between problem and response. During that time &mdash; outages, SLA breaches, customer impact.</p>
+  </div>
+  <p>What if the playbook ran <strong style="color: #fff">automatically</strong> the moment the problem was detected?</p>
+</div>
+
+<!-- Slide 2: The Solution -->
+<div class="slide" id="s2">
+  <h1>The Solution: EDA</h1>
+  <p>EDA watches for events in real time and triggers the right response:</p>
+  <div class="flow-box">
+    Problem occurs &rarr; Event emitted &rarr; EDA matches rule &rarr; Playbook runs &rarr; Fixed <span style="color: #4ae64a">(seconds)</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-value blue">Sources</div><div class="stat-label">Where events come from</div></div>
+    <div class="stat"><div class="stat-value yellow">Conditions</div><div class="stat-label">When to act</div></div>
+    <div class="stat"><div class="stat-value">Actions</div><div class="stat-label">What to do</div></div>
+  </div>
+  <p>EDA is an <strong style="color:#fff">"if-this-then-that" engine</strong> for infrastructure, powered by Ansible.</p>
+</div>
+
+<!-- Slide 3: Architecture -->
+<div class="slide" id="s3">
+  <h1>Architecture</h1>
+  <table>
+    <tr><th>Step</th><th>Component</th><th>What Happens</th></tr>
+    <tr><td>1</td><td>Event Source</td><td>External system emits event (Alertmanager, webhook, file change)</td></tr>
+    <tr><td>2</td><td>Source Plugin</td><td>ansible-rulebook receives and parses the event</td></tr>
+    <tr><td>3</td><td>Rules Engine</td><td>Event evaluated against all rules in the rulebook</td></tr>
+    <tr><td>4</td><td>Condition Match</td><td>If condition is true, the action fires</td></tr>
+    <tr><td>5</td><td>Action</td><td>run_job_template calls AAP Controller API</td></tr>
+    <tr><td>6</td><td>AAP Controller</td><td>Launches job template on target hosts</td></tr>
+    <tr><td>7</td><td>Playbook</td><td>Runs remediation/notification on the targets</td></tr>
+  </table>
+  <div class="callout info">
+    <div class="callout-title">Key Insight</div>
+    <p>Your existing playbooks and job templates stay the same. EDA adds the reactive layer on top.</p>
+  </div>
+</div>
+
+<!-- Slide 4: Key Concepts -->
+<div class="slide" id="s4">
+  <h1>Key Concepts</h1>
+  <div class="grid-2">
+    <div class="grid-card"><h3>Rulebook</h3><p>A YAML file defining source &rarr; condition &rarr; action. The core of EDA.</p></div>
+    <div class="grid-card"><h3>Source Plugin</h3><p>Listens for events: webhook, alertmanager, file_watch, journald, or custom.</p></div>
+    <div class="grid-card"><h3>Condition</h3><p>Expression evaluated per event.<br><code>event.payload.field == "value"</code></p></div>
+    <div class="grid-card"><h3>Action</h3><p><code>run_job_template</code>, <code>run_playbook</code>, <code>debug</code>, <code>set_fact</code>, <code>post_event</code></p></div>
+    <div class="grid-card"><h3>Decision Environment</h3><p>Container image for ansible-rulebook. Like an EE but for EDA.</p></div>
+    <div class="grid-card"><h3>Rulebook Activation</h3><p>A running instance of a rulebook in EDA Controller. Always listening.</p></div>
+  </div>
+</div>
+
+<!-- Slide 5: Rulebook Anatomy -->
+<div class="slide" id="s5">
+  <h1>Rulebook Anatomy</h1>
+  <p>Real example from our repo: <code>alertmanager/csr-approval.yml</code></p>
+  <pre>
+<span class="kw">- name:</span> <span class="str">CSR Auto-Approval on AlertingDegraded</span>
+  <span class="kw">hosts:</span> all
+  <span class="kw">sources:</span>                                    <span class="cmt"># WHERE</span>
+    - <span class="kw">ansible.eda.alertmanager:</span>
+        <span class="kw">host:</span> <span class="str">"0.0.0.0"</span>
+        <span class="kw">port:</span> <span class="str">8000</span>
+
+  <span class="kw">rules:</span>
+    - <span class="kw">name:</span> <span class="str">Approve CSRs on AlertingDegraded</span>
+      <span class="kw">condition:</span> <span class="str">&gt;-</span>                           <span class="cmt"># WHEN</span>
+        event.payload.status == "firing" and
+        event.payload.alerts[0].labels.alertname == "AlertingDegraded"
+      <span class="kw">action:</span>                                 <span class="cmt"># WHAT</span>
+        <span class="kw">run_job_template:</span>
+          <span class="kw">name:</span> <span class="str">"NOC - CSR Approval"</span>
+          <span class="kw">organization:</span> <span class="str">"Default"</span>
+          <span class="kw">job_args:</span>
+            <span class="kw">limit:</span> <span class="str">"{{ event.payload.alerts[0].labels.cluster }}"</span></pre>
+  <div>
+    <span class="pill blue">Source: Alertmanager</span>
+    <span class="pill yellow">Condition: AlertingDegraded firing</span>
+    <span class="pill green">Action: CSR Approval with cluster limit</span>
+  </div>
+</div>
+
+<!-- Slide 6: What We Built -->
+<div class="slide" id="s6">
+  <h1>What We Built and Tested</h1>
+  <table>
+    <tr><th>Rulebook</th><th>Source</th><th>Action</th><th>Status</th></tr>
+    <tr><td>webhook-basic.yml</td><td>Webhook</td><td>Debug (print payload)</td><td style="color:#4ae64a">Tested</td></tr>
+    <tr><td>webhook-filtered.yml</td><td>Webhook</td><td>Routes to Remediate / Notify jobs</td><td style="color:#4ae64a">Tested</td></tr>
+    <tr><td>alertmanager-basic.yml</td><td>Alertmanager</td><td>Debug (print alert)</td><td style="color:#4ae64a">Tested</td></tr>
+    <tr><td>alertmanager-filtered.yml</td><td>Alertmanager</td><td>Routes by severity to different jobs</td><td style="color:#4ae64a">Tested</td></tr>
+    <tr><td>file-watch-basic.yml</td><td>File Watch</td><td>Detects create/modify/delete</td><td style="color:#4ae64a">Tested</td></tr>
+    <tr><td>csr-approval.yml</td><td>Alertmanager</td><td>Auto-approves CSRs</td><td style="color:#4a9eff">Production</td></tr>
+    <tr><td>ocp-demo.yml</td><td>Alertmanager</td><td>Real OCP alert &rarr; Show Alert</td><td style="color:#4ae64a">Tested</td></tr>
+  </table>
+  <p style="margin-top: 16px">All tested end-to-end on AAP 2.6 / OCP 4.20, then deployed to offline environment.</p>
+</div>
+
+<!-- Slide 7: Real-World Use Case -->
+<div class="slide" id="s7">
+  <h1>Real-World: CSR Auto-Approval</h1>
+  <h3>Before EDA</h3>
+  <div class="flow-box" style="color: #ff7b72">
+    Certs expire &rarr; AlertingDegraded &rarr; NOC paged &rarr; Engineer logs in &rarr; Runs CSR approval &rarr; <strong>30+ min</strong>
+  </div>
+  <h3>With EDA</h3>
+  <div class="flow-box" style="color: #4ae64a">
+    Certs expire &rarr; AlertingDegraded &rarr; EDA catches it &rarr; CSR approval runs &rarr; <strong>Seconds</strong>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-value">Seconds</div><div class="stat-label">Response Time</div></div>
+    <div class="stat"><div class="stat-value">Zero</div><div class="stat-label">Human Intervention</div></div>
+    <div class="stat"><div class="stat-value blue">Auto</div><div class="stat-label">Alert Resolution</div></div>
+  </div>
+</div>
+
+<!-- Slide 8: Gotchas -->
+<div class="slide" id="s8">
+  <h1>Gotchas We Learned</h1>
+  <table>
+    <tr><th>Issue</th><th style="color:#ff7b72">Wrong</th><th style="color:#4ae64a">Correct</th></tr>
+    <tr><td>Multi-condition rules</td><td><code>all:</code> (waits for multiple events)</td><td><code>and</code> (single event, multiple checks)</td></tr>
+    <tr><td>File watch event field</td><td><code>event.type</code></td><td><code>event.change</code></td></tr>
+    <tr><td>Playbook extra_vars</td><td><code>var: "{{ var }}"</code> (recursive loop)</td><td><code>_var: "{{ var }}"</code> (prefix)</td></tr>
+    <tr><td>EDA credential URL</td><td>Gateway URL</td><td>Controller route directly</td></tr>
+    <tr><td>API token</td><td>Gateway token</td><td>Controller-native token</td></tr>
+    <tr><td>Watched paths</td><td>Custom dir (crashes)</td><td>/tmp with prefix filter</td></tr>
+  </table>
+  <div class="callout info">
+    <div class="callout-title">Full Details</div>
+    <p>See <code>docs/08-lessons-learned.md</code> in the repo for complete explanations and fixes.</p>
+  </div>
+</div>
+
+<!-- Slide 9: Creating Your Own -->
+<div class="slide" id="s9">
+  <h1>Creating Your Own Rulebook</h1>
+  <p>5 steps from idea to running activation:</p>
+  <table>
+    <tr><th>#</th><th>What</th><th>Where</th></tr>
+    <tr><td>1</td><td>Create the rulebook YAML</td><td><code>rulebooks/&lt;source&gt;/&lt;name&gt;.yml</code></td></tr>
+    <tr><td>2</td><td>Create the playbook (if needed)</td><td><code>playbooks/&lt;name&gt;.yml</code></td></tr>
+    <tr><td>3</td><td>Create the job template</td><td>AAP UI &rarr; Templates (enable Prompt on Launch)</td></tr>
+    <tr><td>4</td><td>Push to git, sync project</td><td><code>git push</code> &rarr; EDA UI &rarr; Sync</td></tr>
+    <tr><td>5</td><td>Create activation, enable</td><td>EDA UI &rarr; Rulebook Activations &rarr; Create</td></tr>
+  </table>
+  <h3 style="margin-top: 24px">Rulebook Template</h3>
+  <pre>
+<span class="kw">- name:</span> <span class="str">My New Rulebook</span>
+  <span class="kw">hosts:</span> all
+  <span class="kw">sources:</span>
+    - <span class="kw">ansible.eda.webhook:</span>
+        <span class="kw">host:</span> <span class="str">"{{ webhook_host | default('0.0.0.0') }}"</span>
+        <span class="kw">port:</span> <span class="str">"{{ webhook_port | default(5000) }}"</span>
+  <span class="kw">rules:</span>
+    - <span class="kw">name:</span> <span class="str">React to my event</span>
+      <span class="kw">condition:</span> event.payload.type == "my_event"
+      <span class="kw">action:</span>
+        <span class="kw">run_job_template:</span>
+          <span class="kw">name:</span> <span class="str">"My Template"</span>
+          <span class="kw">organization:</span> <span class="str">"Default"</span>
+          <span class="kw">job_args:</span>
+            <span class="kw">extra_vars:</span>
+              <span class="kw">data:</span> <span class="str">"{{ event.payload.data }}"</span></pre>
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prev()">&#8592; Previous</button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">1 / 10</span>
+  <button class="primary" onclick="next()">Next &#8594;</button>
+</div>
+
+<script>
+  const total = 10;
+  let current = 0;
+
+  function show(n) {
+    current = Math.max(0, Math.min(total - 1, n));
+    document.querySelectorAll('.slide').forEach((s, i) => {
+      s.classList.toggle('active', i === current);
+    });
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  // Build dots
+  const dots = document.getElementById('dots');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => show(i);
+    dots.appendChild(d);
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+  });
+</script>
+
+</body>
+</html>

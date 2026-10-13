@@ -23,11 +23,23 @@
       condition: event.payload.status == "firing" and event.payload.alerts[0].labels.alertname == "AlertingDegraded"
       action:
         run_job_template:
-          name: "{{ csr_approval_template | default('CSR Approval') }}"
+          name: "{{ csr_approval_template | default('NOC - CSR Approval') }}"
           organization: "{{ aap_organization | default('Default') }}"
+          job_args:
+            limit: "{{ event.payload.alerts[0].labels.cluster | default(event.payload.externalURL | default('')) }}"
+            extra_vars:
+              alert_name: "{{ event.payload.alerts[0].labels.alertname }}"
+              severity: "{{ event.payload.alerts[0].labels.severity | default('unknown') }}"
+              summary: "{{ event.payload.alerts[0].annotations.summary | default('') }}"
 
     - name: Log when AlertingDegraded resolves
       condition: event.payload.status == "resolved" and event.payload.alerts[0].labels.alertname == "AlertingDegraded"
       action:
         debug:
           msg: "AlertingDegraded resolved -- CSRs likely approved successfully"
+
+    - name: DEBUG - Log every incoming event
+      condition: event.payload is defined
+      action:
+        debug:
+          msg: "RAW EVENT RECEIVED: {{ event.payload }}"
